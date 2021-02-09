@@ -1,0 +1,130 @@
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: True}: 
+    ([Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=1), Person(name=1, age=1)], [Person(name=0, age=0), Person(name=0, age=0), Person(name=1, age=1), Person(name=0, age=1)])
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: False}: 
+    (p1 & p4) -> p6
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: True}: 
+    (p4 & p6) -> p5
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: False}: 
+    (p1 & p4) -> p6
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: True}: 
+    (p5 & p6) -> p4
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: False}: 
+    (p2 & p5) -> p6
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: True}: 
+    ([Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=1), Person(name=1, age=1)], [Person(name=0, age=0), Person(name=0, age=1), Person(name=0, age=1), Person(name=1, age=1)])
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: False}: 
+    ([Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0)], [Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0)])
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: True}: 
+    ([Person(name=1, age=0), Person(name=1, age=0), Person(name=1, age=0), Person(name=1, age=1), Person(name=1, age=1)], [Person(name=1, age=0), Person(name=1, age=0), Person(name=1, age=1), Person(name=1, age=1), Person(name=1, age=0)])
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: False}: 
+    (p1 & p4) -> p6
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: True}: 
+    (p4 & p6) -> p5
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: False}: 
+    (p1 & p4) -> p6
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: True}: 
+    (p5 & p6) -> p4
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: False}: 
+    (p2 & p5) -> p6
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: True}: 
+    ([Person(name=0, age=0), Person(name=0, age=0), Person(name=1, age=0), Person(name=1, age=1)], [Person(name=0, age=0), Person(name=1, age=0), Person(name=1, age=1), Person(name=1, age=0)])
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: False}: 
+    ([Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=1), Person(name=1, age=0)], [Person(name=0, age=0), Person(name=0, age=1), Person(name=1, age=0)])
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: True}: 
+    p4 -> p2
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: False}: 
+    p4 -> p2
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: True}: 
+    p4 -> p2
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: False}: 
+    p4 -> p2
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: True}: 
+    (p5 & p6) -> p4
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: False}: 
+    ([Person(name=0, age=0), Person(name=1, age=1), Person(name=1, age=1), Person(name=1, age=1)], [Person(name=0, age=0), Person(name=0, age=1), Person(name=1, age=1), Person(name=1, age=1), Person(name=1, age=1)])
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: True}: 
+    ([Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0)], [Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=1)])
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: False}: 
+    ([Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0)], [Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=1)])
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: True}: 
+    p4 -> p2
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: False}: 
+    p4 -> p2
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: True}: 
+    p4 -> p2
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: False}: 
+    p4 -> p2
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: True}: 
+    (p5 & p6) -> p4
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: False}: 
+    ([Person(name=1, age=0), Person(name=1, age=0), Person(name=1, age=1), Person(name=1, age=1)], [Person(name=0, age=0), Person(name=1, age=0), Person(name=1, age=1), Person(name=1, age=1), Person(name=1, age=0)])
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: True}: 
+    ([Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0)], [Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=1), Person(name=0, age=0)])
+{<PName.P1: 'p1'>: True, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: False}: 
+    ([Person(name=1, age=1), Person(name=1, age=1), Person(name=1, age=1), Person(name=1, age=1)], [Person(name=0, age=0), Person(name=1, age=1), Person(name=0, age=0)])
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: True}: 
+    p5 -> p1
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: False}: 
+    p5 -> p1
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: True}: 
+    (p4 & p6) -> p5
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: False}: 
+    ([Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=1)], [Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0)])
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: True}: 
+    p5 -> p1
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: False}: 
+    p5 -> p1
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: True}: 
+    ([Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=1)], [Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0)])
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: False}: 
+    ([Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=1), Person(name=0, age=1)], [Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0)])
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: True}: 
+    p5 -> p1
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: False}: 
+    p5 -> p1
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: True}: 
+    (p4 & p6) -> p5
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: False}: 
+    ([Person(name=0, age=0), Person(name=0, age=1), Person(name=1, age=0), Person(name=1, age=0)], [Person(name=0, age=1), Person(name=1, age=0), Person(name=1, age=0)])
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: True}: 
+    p5 -> p1
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: False}: 
+    p5 -> p1
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: True}: 
+    ([Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=1), Person(name=0, age=2)], [Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=1), Person(name=0, age=0)])
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: True, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: False}: 
+    ([Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=1), Person(name=1, age=0)], [Person(name=0, age=1), Person(name=0, age=1), Person(name=0, age=0)])
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: True}: 
+    p5 -> p1
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: False}: 
+    p5 -> p1
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: True}: 
+    p4 -> p2
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: False}: 
+    p4 -> p2
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: True}: 
+    p5 -> p1
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: False}: 
+    p5 -> p1
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: True}: 
+    ([Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=1)], [Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=2)])
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: True, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: False}: 
+    ([Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=2)], [Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=1)])
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: True}: 
+    p5 -> p1
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: False}: 
+    p5 -> p1
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: True}: 
+    p4 -> p2
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: True, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: False}: 
+    p4 -> p2
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: True}: 
+    p5 -> p1
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: True, <PName.P6: 'p6'>: False}: 
+    p5 -> p1
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: True}: 
+    ([Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=2)], [Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=1), Person(name=0, age=0)])
+{<PName.P1: 'p1'>: False, <PName.P2: 'p2'>: False, <PName.P3: 'p3'>: False, <PName.P4: 'p4'>: False, <PName.P5: 'p5'>: False, <PName.P6: 'p6'>: False}: 
+    ([Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=0), Person(name=0, age=2)], [Person(name=0, age=0), Person(name=0, age=1), Person(name=0, age=0)])
+{'known_invalid': 42, 'example_found': 22, 'no_example': 0}
+205.819990419
