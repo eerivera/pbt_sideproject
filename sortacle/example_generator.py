@@ -62,7 +62,7 @@ if __name__ == '__main__':
             example = find(io_pair_strategy, 
                            valid_example,
                            settings=settings(max_examples=500_000))
-            print(f"{p_combo}: \n\t{hypo_output}")
+            print(f"{p_combo}: \n\t{example}")
             count["example_found"] += 1
         except NoSuchExample:
             print(f"{p_combo}: \n\tNo example found")
