@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, List, Tuple
+from typing import Any, Callable, List, Tuple
 
 @dataclass
 class Person:
     name: int
     age: int
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any):
         if not isinstance(other, Person):
             return False
         return self.name == other.name and self.age == other.age
