@@ -1,5 +1,5 @@
 from enum import Enum
-from hypothesis import assume, settings, find
+from hypothesis import assume, settings, find, Phase
 from hypothesis.strategies import builds, integers, lists, tuples
 from hypothesis.errors import NoSuchExample
 from itertools import product
@@ -46,10 +46,10 @@ class AbstractWriter:
     def write_known_unsatisfiable(self, p_combo: PCombo, reason: str):
         raise NotImplementedError
 
-    def write_valid_example(self, p_combo: PCombo, example: IOPair):
+    def write_valid_example(self, p_combo: PCombo, example: IOPair, bucket: int):
         raise NotImplementedError
 
-    def write_example_not_found(self, p_combo: PCombo):
+    def write_example_not_found(self, p_combo: PCombo, bucket: int):
         raise NotImplementedError
 
     def mark_end(self):
@@ -69,11 +69,11 @@ class DebugWriter(AbstractWriter):
         print(f"{p_combo}: \n\t{reason}")
         self.count["known_invalid"] += 1
 
-    def write_valid_example(self, p_combo: PCombo, example: IOPair):
+    def write_valid_example(self, p_combo: PCombo, example: IOPair, _: int):
         print(f"{p_combo}: \n\t{example}")
         self.count["example_found"] += 1
 
-    def write_example_not_found(self, p_combo: PCombo):
+    def write_example_not_found(self, p_combo: PCombo, _: int):
         print(f"{p_combo}: \n\tNo example found")
         self.count["no_example"] += 1
 
@@ -101,10 +101,10 @@ class PyretWriter(AbstractWriter):
     def write_known_unsatisfiable(self, p_combo: PCombo, reason: str):
         pass
 
-    def write_valid_example(self, p_combo: PCombo, example: IOPair):
+    def write_valid_example(self, p_combo: PCombo, example: IOPair, bucket: int):
         input_list, output_list = example
         self.filestring += (
-            f"check \"{self.make_test_name(p_combo)}\":\n"
+            f"check \"{self.make_test_name(p_combo, bucket)}\":\n"
             f"  is-valid(\n"
             f"    {self.make_personlist_str(input_list)},\n"
             f"    {self.make_personlist_str(output_list)}\n"
@@ -112,9 +112,9 @@ class PyretWriter(AbstractWriter):
             "end\n\n"
         )
 
-    def write_example_not_found(self, p_combo: PCombo):
+    def write_example_not_found(self, p_combo: PCombo, bucket: int):
         self.filestring += (
-            f"# No check was generated for \"{self.make_test_name(p_combo)}\"\n"
+            f"# No check was generated for \"{self.make_test_name(p_combo, bucket)}\"\n"
             "# Please re-run the example generator.\n\n"
         )
 
@@ -122,10 +122,10 @@ class PyretWriter(AbstractWriter):
         with open(self.filename, 'w') as file:
             file.write(self.filestring)
 
-    def make_test_name(self, p_combo: PCombo):
+    def make_test_name(self, p_combo: PCombo, bucket: int):
         if all(p_combo.values()):
-            return "allp-passing_0"
-        return f"notp-{'-'.join(p.name[1:] for p, value in p_combo.items() if not value)}_0" # TODO - able to generate multiple examples per bucket?
+            return f"allprop_{bucket}"
+        return f"notp-{'-'.join(p.name[1:] for p, value in p_combo.items() if not value)}_{bucket}" # TODO - able to generate multiple examples per bucket?
 
     def make_personlist_str(self, person_list: PersonSequence):
         return f"[list: {', '.join(self.make_person_str(person) for person in person_list)}]"
@@ -151,13 +151,18 @@ if __name__ == '__main__':
             return all((p_function_map[p_name](input_list, output_list) == answer
                         for p_name, answer in p_combo.items()
                         if answer is not None))
-        try:
-            example: IOPair = find(io_pair_strategy, # type: ignore # mypy doesn't know enough about the type info of Hypothesis
-                                   valid_example,
-                                   settings=settings(max_examples=500_000))
-            writer.write_valid_example(p_combo, example)
-        except NoSuchExample:
-            writer.write_example_not_found(p_combo)
+        
+        for bucket in range(15):
+            phases_to_use = [Phase.generate, Phase.target] 
+            if bucket <= 2:
+                phases_to_use.append(Phase.shrink)
+            try:
+                example: IOPair = find(io_pair_strategy, # type: ignore # mypy doesn't know enough about the type info of Hypothesis
+                                       valid_example,
+                                       settings=settings(max_examples=500_000, phases=phases_to_use))
+                writer.write_valid_example(p_combo, example, bucket)
+            except NoSuchExample:
+                writer.write_example_not_found(p_combo, bucket)
 
     writer.mark_end()
 
