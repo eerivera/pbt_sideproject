@@ -2,6 +2,7 @@ from enum import Enum
 from hypothesis import assume, settings, find, Phase
 from hypothesis.strategies import builds, integers, lists, tuples
 from hypothesis.errors import NoSuchExample
+from io import StringIO
 from itertools import product
 from typing import Dict, Tuple
 import time
@@ -12,9 +13,14 @@ usable_ints = integers(min_value=0, max_value=5)
 names = usable_ints
 ages = usable_ints
 people = builds(Person, name=names, age=ages)
-inputlist_strategy = lists(people, min_size=4, max_size=5)
-outputlist_strategy = lists(people, min_size=3, max_size=5)
+inputlist_strategy = lists(people, min_size=3, max_size=5)
+outputlist_strategy = lists(people, min_size=2, max_size=5)
 io_pair_strategy = tuples(inputlist_strategy, outputlist_strategy)
+
+inputlist_strategy_trivial = lists(people, min_size=0, max_size=5)
+outputlist_strategy_trivial = lists(people, min_size=0, max_size=5)
+io_pair_strategy_trivial = tuples(inputlist_strategy_trivial, outputlist_strategy_trivial)
+
 
 IOPair = Tuple[PersonSequence, PersonSequence]
 PCombo = Dict[PName, bool]
@@ -40,6 +46,12 @@ def is_known_unsatisfiable(p_combo: PCombo):
 
 class AbstractWriter:
     def __init__(self):
+        pass
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self):
         pass
 
     # TODO - mark as abstract methods
@@ -96,14 +108,24 @@ class PyretWriter(AbstractWriter):
     def __init__(self, filename):
         super().__init__()
         self.filename = filename
-        self.filestring = ""
+        self.stringio = None
+
+    def __enter__(self):
+        self.stringio = StringIO()
+        return self
+
+    def __exit__(self, *_): # TODO - handle errors
+        with open(self.filename, 'w') as file:
+            file.write(self.stringio.getvalue())
+        self.stringio.close()
+        self.stringio = None
 
     def write_known_unsatisfiable(self, p_combo: PCombo, reason: str):
         pass
 
     def write_valid_example(self, p_combo: PCombo, example: IOPair, bucket: int):
         input_list, output_list = example
-        self.filestring += (
+        self.stringio.write(
             f"check \"{self.make_test_name(p_combo, bucket)}\":\n"
             f"  is-valid(\n"
             f"    {self.make_personlist_str(input_list)},\n"
@@ -113,14 +135,10 @@ class PyretWriter(AbstractWriter):
         )
 
     def write_example_not_found(self, p_combo: PCombo, bucket: int):
-        self.filestring += (
+        self.stringio.write(
             f"# No check was generated for \"{self.make_test_name(p_combo, bucket)}\"\n"
             "# Please re-run the example generator.\n\n"
         )
-
-    def mark_end(self):
-        with open(self.filename, 'w') as file:
-            file.write(self.filestring)
 
     def make_test_name(self, p_combo: PCombo, bucket: int):
         if all(p_combo.values()):
@@ -134,37 +152,44 @@ class PyretWriter(AbstractWriter):
         return f"person(\'{PyretWriter.DWARF_NAMES[person.name]}\', {person.age})"
 
 if __name__ == '__main__':
-    # writer = DebugWriter()
-    writer = PyretWriter("hypothesis_checks.arr")
-    
-    for bitvector in product((True, False), repeat=6):
-        p_combo = {p_name: answer for p_name, answer in zip(p_name_list, bitvector)}
+    OUTPUT_FILE = "hypothesis_checks_buckets_trivial.arr"
+    EXAMPLES_PER_BUCKET = 15
+    SHRUNK_EXAMPLES_PER_BUCKET = 3
+    TRIVIAL_SHRUNK_EXAMPLES_PER_BUCKET = 1
 
-        is_invalid, reason = is_known_unsatisfiable(p_combo)
-        if is_invalid:
-            writer.write_known_unsatisfiable(p_combo, reason)
-            continue
+    # with DebugWriter() as writer:
+    with PyretWriter(OUTPUT_FILE) as writer:
+        for bitvector in product((True, False), repeat=6):
+            p_combo = {p_name: answer for p_name, answer in zip(p_name_list, bitvector)}
 
-        def valid_example(io_pair: IOPair):
-            input_list, output_list = io_pair
-            assume(input_list != output_list)
-            return all((p_function_map[p_name](input_list, output_list) == answer
-                        for p_name, answer in p_combo.items()
-                        if answer is not None))
-        
-        for bucket in range(15):
-            phases_to_use = [Phase.generate, Phase.target] 
-            if bucket <= 2:
-                phases_to_use.append(Phase.shrink)
-            try:
-                example: IOPair = find(io_pair_strategy, # type: ignore # mypy doesn't know enough about the type info of Hypothesis
-                                       valid_example,
-                                       settings=settings(max_examples=500_000, phases=phases_to_use))
-                writer.write_valid_example(p_combo, example, bucket)
-            except NoSuchExample:
-                writer.write_example_not_found(p_combo, bucket)
+            is_invalid, reason = is_known_unsatisfiable(p_combo)
+            if is_invalid:
+                writer.write_known_unsatisfiable(p_combo, reason)
+                continue
 
-    writer.mark_end()
+            is_trivial = True
+            phases_to_use = [Phase.generate, Phase.target, Phase.shrink]
+
+            def valid_example(io_pair: IOPair):
+                input_list, output_list = io_pair
+                if not is_trivial:
+                    assume(input_list != output_list) # TODO - do we still want/need this?
+                return all((p_function_map[p_name](input_list, output_list) == answer
+                            for p_name, answer in p_combo.items()
+                            if answer is not None))
+            
+            for bucket in range(EXAMPLES_PER_BUCKET):
+                if bucket == SHRUNK_EXAMPLES_PER_BUCKET:
+                    del phases_to_use[-1] # i.e. stop shrinking future examples
+                if bucket == TRIVIAL_SHRUNK_EXAMPLES_PER_BUCKET:
+                    is_trivial = False
+                try:
+                    example: IOPair = find(io_pair_strategy_trivial if is_trivial else io_pair_strategy, # type: ignore # mypy doesn't know enough about the type info of Hypothesis
+                                           valid_example,
+                                           settings=settings(max_examples=500_000, phases=phases_to_use))
+                    writer.write_valid_example(p_combo, example, bucket)
+                except NoSuchExample:
+                    writer.write_example_not_found(p_combo, bucket)
 
 # NOTE: assume(input_list != output_list) eliminates many sets that would be correct. 
 #       The remaining sets are difficult to find and take many more examples.
