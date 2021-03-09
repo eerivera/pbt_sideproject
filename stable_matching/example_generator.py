@@ -24,13 +24,12 @@ def input_pairs(draw, min_n = MIN_N, max_n = MAX_N):
 usable_ints = integers(min_value=MIN_N, max_value=MAX_N)
 hire_strat = builds(Hire, company=usable_ints, candidate=usable_ints)
 matches_strat = sets(hire_strat, min_size=0, max_size=MAX_N)
-io_pair_strat = tuples(input_pairs(min_n=2), matches_strat) # TODO - determine best min_n
+io_pair_strat = tuples(input_pairs(min_n=3), matches_strat) # TODO - determine best min_n
 io_pair_strat_trivial = tuples(input_pairs(min_n=0), matches_strat) # TODO - better trivial generation
 
 PCombo = Dict[PName, bool]
 
 def is_known_unsatisfiable(p_combo: PCombo):
-    # TODO - more detailed explanations of implications
     # P4 is never implied by anything else
 
     if all((p_combo[PName.P2], p_combo[PName.P4], p_combo[PName.P6])) \
@@ -174,13 +173,12 @@ class PyretWriter(AbstractWriter):
 
 if __name__ == '__main__':
     OUTPUT_FILE = "hypothesis_checks_buckets_trivial.arr"
-    EXAMPLES_PER_BUCKET = 1
-    SHRUNK_EXAMPLES_PER_BUCKET = 0
-    TRIVIAL_SHRUNK_EXAMPLES_PER_BUCKET = 0
+    EXAMPLES_PER_BUCKET = 15
+    SHRUNK_EXAMPLES_PER_BUCKET = 3
+    TRIVIAL_SHRUNK_EXAMPLES_PER_BUCKET = 1
 
-    with DebugWriter() as writer:
-    # with PyretWriter(OUTPUT_FILE) as writer:
-        print(len(p_name_list))
+    # with DebugWriter() as writer:
+    with PyretWriter(OUTPUT_FILE) as writer:
         for bitvector in product((True, False), repeat=len(p_name_list)):
             print(bitvector)
             p_combo = {p_name: answer for p_name, answer in zip(p_name_list, bitvector)}

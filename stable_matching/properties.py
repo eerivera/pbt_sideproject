@@ -1,6 +1,8 @@
+from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Tuple, Set
+from typing import Any, Callable, Dict, List, Tuple, Set, Optional
+from itertools import product
 
 @dataclass(eq=True, frozen=True)
 class Hire:
@@ -32,8 +34,50 @@ def p2(input_pair: InputPair, matches: Matches) -> bool:
     return possible_companies.issubset(companies_in_matches) # everyone possible is in matches, but matches can have extra
 
 # STABILITY
+def make_matches_dicts_p3(input_pair: InputPair, matches: Matches): 
+    # map every company to min pref for any candidate
+    #     every candidate to min pref for any company
+    companies, candidates = input_pair
+    n = len(companies)
+    company_matches: Dict[int, int] = defaultdict(lambda:n)
+    candidate_matches: Dict[int, int] = defaultdict(lambda:n)
+    for hire in matches:
+        hire_candidate = hire.candidate
+        hire_company = hire.company
+        if hire_candidate < n and hire_company < n:
+            candidate_pref_of_company = candidates[hire_candidate].index(hire_company)
+            company_matches[hire_company] = min(company_matches[hire_company], candidate_pref_of_company)
+            
+            company_pref_of_candidate = companies[hire_company].index(hire_candidate)
+            candidate_matches[hire_candidate] = min(candidate_matches[hire_candidate], company_pref_of_candidate)
+    return company_matches, candidate_matches
+
 def p3(input_pair: InputPair, matches: Matches) -> bool:
-    pass
+    companies, candidates = input_pair
+    company_best_matches, candidate_best_matches = make_matches_dicts_p3(input_pair, matches)
+    n = len(companies)
+    for cheater_company, cheater_company_prefs in enumerate(companies):
+        cheater_company_best_pref = company_best_matches[cheater_company]
+        for i, cheater_candidate in enumerate(cheater_company_prefs):
+            if i >= cheater_company_best_pref: break
+            if candidates[cheater_candidate].index(cheater_company) < candidate_best_matches[cheater_candidate]:
+                return False
+    # for (cheater_company, cheater_company_prefs), (cheater_candidate, cheater_candidate_prefs) in product(enumerate(companies), enumerate(candidates)):
+    #     if Hire(cheater_company, cheater_candidate) in matches:
+    #         continue
+        
+    #     cheater_company_pref_for_cheater_candidate = cheater_company_prefs.index(cheater_candidate)
+    #     cheater_candidate_pref_for_cheater_company = cheater_candidate_prefs.index(cheater_company)
+    #     # Checking for None means that we just ignore companies in the output that weren't in the input
+    #     if cheater_company_pref_for_cheater_candidate < company_best_matches[cheater_company] and \
+    #        cheater_candidate_pref_for_cheater_company < candidate_best_matches[cheater_candidate]:
+    #        return True
+
+    return True
+    # if there exists a pair that's valid in the input, that isn't matched
+    # and if the person in that pair prefers the company to everyone currently matched to
+    # and if the company in that pair prefers the person to everyone currently matched to
+    # Then p3 is false
 
 # FUNCTIONALITY
 # no candidate or company has more than one match
@@ -71,7 +115,7 @@ class PName(Enum):
 p_function_map: Dict[PName, Property] = {
     PName.P1: p1, 
     PName.P2: p2, 
-    # PName.P3: p3, 
+    PName.P3: p3, 
     PName.P4: p4, 
     PName.P5: p5, 
     PName.P6: p6
