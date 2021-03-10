@@ -30,17 +30,7 @@ io_pair_strat_trivial = tuples(input_pairs(min_n=0), matches_strat) # TODO - bet
 PCombo = Dict[PName, bool]
 
 def is_known_unsatisfiable(p_combo: PCombo):
-    # P4 is never implied by anything else
-
-    if all((p_combo[PName.P2], p_combo[PName.P4], p_combo[PName.P6])) \
-       and not all((p_combo[PName.P1], p_combo[PName.P5])):
-        return (True, "(p2 & p4 & p6) -> (p1 & p5)")
-    elif all((p_combo[PName.P1], p_combo[PName.P4], p_combo[PName.P5])) \
-        and not all((p_combo[PName.P2], p_combo[PName.P6])):
-        return (True, "(p1 & p4 & p5) -> (p2 & p6)")
-    return (False, None)
-
-    # Handwavy argument for above implications:
+    # Handwavy argument for below implications:
 
     # trying to find a case where neither p1 nor p5 are true, but rest are
     # candidates = [0,1,2]
@@ -59,16 +49,39 @@ def is_known_unsatisfiable(p_combo: PCombo):
     # without loss of generality, the same argument applies to prove that
     # p1 & p4 & p5 -> p2 & p6
 
+    if all((p_combo[PName.P2], p_combo[PName.P4], p_combo[PName.P6])) \
+       and not all((p_combo[PName.P1], p_combo[PName.P5])):
+        return (True, "(p2 & p4 & p6) -> (p1 & p5)")
+    elif all((p_combo[PName.P1], p_combo[PName.P4], p_combo[PName.P5])) \
+        and not all((p_combo[PName.P2], p_combo[PName.P6])):
+        return (True, "(p1 & p4 & p5) -> (p2 & p6)")
+
+    # more implications assumed from empirical evidence
+    # TODO - justify these
+    elif p_combo[PName.P3] and not any((p_combo[PName.P1], p_combo[PName.P2])):
+        return (True, "(p3) -> (p1 | p2)")
+    elif all((p_combo[PName.P1], p_combo[PName.P3], p_combo[PName.P4])) \
+        and not any((p_combo[PName.P2], p_combo[PName.P5])):
+        return (True, "(p1 & p3 & p4) -> (p2 | p5)")
+    elif all((p_combo[PName.P2], p_combo[PName.P3], p_combo[PName.P4])) \
+        and not any((p_combo[PName.P1], p_combo[PName.P6])):
+        return (True, "(p2 & p3 & p4) -> (p1 | p6)")
+
+
+
+    return (False, None)
 
 class AbstractWriter:
     def __init__(self):
-        pass
+        self.start_time = None
 
     def __enter__(self):
-        pass
+        self.start_time = time.process_time()
+        return self
 
-    def __exit__(self):
-        pass
+    def __exit__(self, *_):
+        print(time.process_time() - self.start_time)
+        self.start_time = None
 
     # TODO - mark as abstract methods
     def write_known_unsatisfiable(self, p_combo: PCombo, reason: str):
@@ -87,21 +100,15 @@ class AbstractWriter:
 class DebugWriter(AbstractWriter):
     def __init__(self):
         super().__init__()
-        self.start_time = None
         self.count = {
             "known_invalid": 0,
             "example_found": 0,
             "no_example": 0,
         }
 
-    def __enter__(self):
-        self.start_time = time.process_time()
-        return self
-
     def __exit__(self, *_): # TODO - handle errors
+        super().exit()
         print(self.count)
-        print(time.process_time() - self.start_time)
-        self.start_time = None
 
     def write_known_unsatisfiable(self, p_combo: PCombo, reason: str):
         print(f"{p_combo}: \n\t{reason}")
@@ -123,17 +130,22 @@ class PyretWriter(AbstractWriter):
         self.stringio = None
 
     def __enter__(self):
+        super().__enter__()
         self.stringio = StringIO()
         return self
 
     def __exit__(self, *_): # TODO - handle errors
+        super().__exit__()
         with open(self.filename, 'w') as file:
             file.write(self.stringio.getvalue())
         self.stringio.close()
         self.stringio = None
 
     def write_known_unsatisfiable(self, p_combo: PCombo, reason: str):
-        pass
+        self.stringio.write(
+            f"# No check was generated for \"{self.make_test_name(p_combo, -1)}\"\n"
+            f"# The example generator gave the following reason: {reason}.\n\n"
+        )
 
     def write_valid_example(self, p_combo: PCombo, example: IOPair, bucket: int):
         input_pair, matches = example
@@ -208,6 +220,7 @@ if __name__ == '__main__':
                     writer.write_valid_example(p_combo, example, bucket)
                 except NoSuchExample:
                     writer.write_example_not_found(p_combo, bucket)
+            print(time.process_time() - writer.start_time)
 
 # NOTE: assume(input_list != output_list) eliminates many sets that would be correct. 
 #       The remaining sets are difficult to find and take many more examples.
