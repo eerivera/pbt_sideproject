@@ -175,7 +175,7 @@ class PyretWriter(AbstractWriter):
         return f"[list: {', '.join(map(self.make_prefs_str, prefs_list))}]"
 
     def make_prefs_str(self, prefs: Preferences):
-        return f"[list: {', '.join(map(str, prefs))})"
+        return f"[list: {', '.join(map(str, prefs))}]"
 
     def make_matches_str(self, matches: Matches):
         return f"[set: {', '.join(map(self.make_hire_str, matches))}]"
