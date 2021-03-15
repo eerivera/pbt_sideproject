@@ -67,6 +67,8 @@ def is_known_unsatisfiable(p_combo: PCombo):
         and not any((p_combo[PName.P1], p_combo[PName.P6])):
         return (True, "(p2 & p3 & p4) -> (p1 | p6)")
 
+    # REVISIT THESE ASSUMPTIONS NOW THAT THOMAS CAUGHT A BUG IN P3
+
 
 
     return (False, None)

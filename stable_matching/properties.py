@@ -45,11 +45,11 @@ def make_matches_dicts_p3(input_pair: InputPair, matches: Matches):
         hire_candidate = hire.candidate
         hire_company = hire.company
         if hire_candidate < n and hire_company < n:
-            candidate_pref_of_company = candidates[hire_candidate].index(hire_company)
-            company_matches[hire_company] = min(company_matches[hire_company], candidate_pref_of_company)
-            
             company_pref_of_candidate = companies[hire_company].index(hire_candidate)
-            candidate_matches[hire_candidate] = min(candidate_matches[hire_candidate], company_pref_of_candidate)
+            candidate_pref_of_company = candidates[hire_candidate].index(hire_company)
+            
+            company_matches[hire_company] = min(company_matches[hire_company], company_pref_of_candidate)
+            candidate_matches[hire_candidate] = min(candidate_matches[hire_candidate], candidate_pref_of_company)
     return company_matches, candidate_matches
 
 def p3(input_pair: InputPair, matches: Matches) -> bool:
@@ -124,3 +124,11 @@ p_function_map: Dict[PName, Property] = {
 p_name_list = sorted(p_function_map.keys(), key=lambda x:x.name)
 
 # We rely heavily on the well-formedness of inputs.
+
+if __name__ == '__main__':
+    example_companies = [[1, 2, 0, 3], [1, 2, 3, 0], [1, 2, 0, 3], [2, 0, 3, 1]]
+    example_candidates = [[0, 3, 1, 2], [2, 0, 3, 1], [3, 2, 0, 1], [0, 3, 1, 2]]
+
+    example_output = {Hire(2, 1), Hire(3, 2), Hire(0, 3), Hire(1, 0)}
+
+    print(p3((example_companies, example_candidates), example_output))
