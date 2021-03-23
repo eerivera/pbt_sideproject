@@ -2,7 +2,7 @@ from hypothesis import assume, settings, find, Phase
 from hypothesis.strategies import booleans, builds, composite, lists, permutations, sampled_from, tuples
 from hypothesis.errors import NoSuchExample
 from io import StringIO
-from itertools import product
+from itertools import combinations, product
 from typing import Dict, List, Tuple
 import time
 
@@ -10,39 +10,38 @@ from properties import DAG, Output, PName, p_function_map, p_name_list
 
 IOPair = Tuple[DAG, Output]
 
-MIN_N = 0
-MIN_N_NONTRIVIAL = 3
 MAX_N = 10
-MIN_EDGES = 0
-MIN_EDGES_NONTRIVIAL = 7
-
-
-NODE_MASTER_LIST = [list(map(str, range(n))) for n in range(MIN_N, MAX_N)]
+NODE_MASTER_LIST_TRIVIAL = [(n, 
+                             list(map(str, range(n))),
+                             list(map(str, range(min(n+1, MAX_N))))) 
+                            for n in range(MAX_N)]
+NODE_MASTER_LIST = NODE_MASTER_LIST_TRIVIAL[4:]
 OUTPUT_MASTER_LIST = list(map(str, range(10)))
 
 @composite
-def edge_pairs_strat(draw, is_trivial=False):
-    min_n = MIN_N if is_trivial else MIN_N_NONTRIVIAL
-    n_list = draw(sampled_from(NODE_MASTER_LIST[min_n:MAX_N]))
-    n = len(n_list)
-    ordering = draw(permutations(n_list))
-    edges = [(source, sink) 
-             for i, source in enumerate(ordering)
-             for j, sink in enumerate(ordering[i+1:], start=i+1)
-             if draw(booleans())]
-    min_edges = MIN_EDGES if is_trivial else MIN_EDGES_NONTRIVIAL
-    if not is_trivial:
-        assume(len(edges) >= min_edges)
-    return draw(permutations(edges))
+def io_pair_strat_comp(draw):
+    n, node_list, output_node_list = draw(sampled_from(NODE_MASTER_LIST))
+    output_strat = lists(sampled_from(output_node_list), min_size=3, max_size=10)
+    ordering = draw(permutations(node_list))
+    possible_edges = list(combinations(ordering, 2))
+    edges_strat = lists(sampled_from(possible_edges), min_size=4, unique=True)
+    dag_strat = builds(DAG, edge_tuples=edges_strat)
+    return draw(tuples(dag_strat, output_strat))
 
-dag_strat = builds(DAG, edge_tuples=edge_pairs_strat())
-dag_strat_trivial = builds(DAG, edge_tuples=edge_pairs_strat(is_trivial=True))
+@composite
+def io_pair_strat_trivial_comp(draw):
+    n, node_list, output_node_list = draw(sampled_from(NODE_MASTER_LIST_TRIVIAL))
+    output_strat = lists(sampled_from(output_node_list), min_size=0, max_size=10)
+    if n < 2:
+        return (DAG([]), draw(output_strat))
+    ordering = draw(permutations(node_list))
+    possible_edges = list(combinations(ordering, 2))
+    edges_strat = lists(sampled_from(possible_edges), min_size=0, unique=True)
+    dag_strat = builds(DAG, edge_tuples=edges_strat)
+    return draw(tuples(dag_strat, output_strat))
 
-output_strat = lists(sampled_from(OUTPUT_MASTER_LIST), min_size=MIN_N_NONTRIVIAL, max_size=MAX_N)
-output_strat_trivial = lists(sampled_from(OUTPUT_MASTER_LIST), max_size=MAX_N)
-
-io_pair_strat = tuples(dag_strat, output_strat) # TODO - determine best min_n
-io_pair_strat_trivial = tuples(dag_strat_trivial, output_strat_trivial) # TODO - better trivial generation
+io_pair_strat = io_pair_strat_comp() # TODO - determine best min_n
+io_pair_strat_trivial = io_pair_strat_trivial_comp() # TODO - better trivial generation
 
 PCombo = Dict[PName, bool]
 
@@ -152,6 +151,7 @@ class PythonWriter(AbstractWriter):
     def write_valid_example(self, p_combo: PCombo, example: IOPair, bucket: int):
         prev_p_combo_name, prev_examples = self.examples[-1]
         current_p_combo_name = self.make_test_name(p_combo)
+        print(f"Found example for {current_p_combo_name}_{bucket}")
 
         if prev_p_combo_name != current_p_combo_name:
             if len(prev_examples) == 0:
@@ -163,7 +163,7 @@ class PythonWriter(AbstractWriter):
         curr_examples.append(example)
 
     def write_example_not_found(self, p_combo: PCombo, bucket: int):
-        pass
+        print(f"Missing example for {self.make_test_name(p_combo)}_{bucket}")
 
     def wrap_up_examples(self):
         prev_p_combo_name, prev_examples = self.examples[-1]
@@ -219,7 +219,7 @@ class PythonWriter(AbstractWriter):
 
 
 if __name__ == '__main__':
-    OUTPUT_FILE = "hypothesis_checks_buckets_trivial.py"
+    OUTPUT_FILE = "fewer_edges.py"
     EXAMPLES_PER_BUCKET = 15
     SHRUNK_EXAMPLES_PER_BUCKET = 3
     TRIVIAL_SHRUNK_EXAMPLES_PER_BUCKET = 1
@@ -251,7 +251,7 @@ if __name__ == '__main__':
                 try:
                     example: IOPair = find(io_pair_strat_trivial if is_trivial else io_pair_strat, # type: ignore # mypy doesn't know enough about the type info of Hypothesis
                                            valid_example,
-                                           settings=settings(max_examples=10_000, phases=phases_to_use))
+                                           settings=settings(max_examples=500_000, phases=phases_to_use))
                     writer.write_valid_example(p_combo, example, bucket)
                 except NoSuchExample:
                     writer.write_example_not_found(p_combo, bucket)
