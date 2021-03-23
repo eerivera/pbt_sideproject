@@ -113,58 +113,119 @@ class DebugWriter(AbstractWriter):
         print(f"{p_combo}: \n\tNo example found")
         self.count["no_example"] += 1
 
+class PythonWriter(AbstractWriter):
+    def __init__(self, filename: str):
+        super().__init__()
+        self.filename = filename
+        self.stringio = None
 
-# class PyretWriter(AbstractWriter):
-#     def __init__(self, filename):
-#         super().__init__()
-#         self.filename = filename
-#         self.stringio = None
+        # each element is (str, [IOPair])
+        self.examples: List[Tuple[str, List[IOPair]]] = [("allprop", [])]
 
-#     def __enter__(self):
-#         super().__enter__()
-#         self.stringio = StringIO()
-#         return self
+        # each element is a (p_name, reason)
+        self.known_invalid_combos: List[Tuple[str, str]] = []
 
-#     def __exit__(self, *_): # TODO - handle errors
-#         super().__exit__()
-#         with open(self.filename, 'w') as file:
-#             file.write(self.stringio.getvalue())
-#         self.stringio.close()
-#         self.stringio = None
+        # each element is a p_name
+        self.not_found_combos: List[str] = []
 
-#     def write_known_unsatisfiable(self, p_combo: PCombo, reason: str):
-#         self.stringio.write(
-#             f"# No check was generated for \"{self.make_test_name(p_combo, -1)}\"\n"
-#             f"# The example generator gave the following reason: {reason}.\n\n"
-#         )
+    def __enter__(self):
+        super().__enter__()
+        self.stringio: StringIO = StringIO()
+        return self
 
-#     def write_valid_example(self, p_combo: PCombo, example: IOPair, bucket: int):
-#         input_pair, matches = example
-#         companies, candidates = input_pair
-#         self.stringio.write(
-#             f"check \"{self.make_test_name(p_combo, bucket)}\":\n"
-#             f"  is-valid(\n"
-#             f"    {self.make_prefs_list_str(companies)},\n"
-#             f"    {self.make_prefs_list_str(candidates)},\n"
-#             f"    {self.make_matches_str(matches)}\n"
-#             f"  ) is {'true' if all(p_combo.values()) else 'false'}\n"
-#             "end\n\n"
-#         )
+    def __exit__(self, *_): # TODO - handle errors
+        super().__exit__()
+        self.wrap_up_examples()
+        self.write_python_header()
+        self.write_python_examples()
+        self.write_python_known_invalid()
+        self.write_python_not_found()
 
-#     def write_example_not_found(self, p_combo: PCombo, bucket: int):
-#         self.stringio.write(
-#             f"# No check was generated for \"{self.make_test_name(p_combo, bucket)}\"\n"
-#             "# Please re-run the example generator.\n\n"
-#         )
+        with open(self.filename, 'w') as file:
+            file.write(self.stringio.getvalue())
+        self.stringio.close()
+        self.stringio = None
+
+    def write_known_unsatisfiable(self, p_combo: PCombo, reason: str):
+        self.known_invalid_combos.append((self.make_test_name(p_combo), reason))
+
+    def write_valid_example(self, p_combo: PCombo, example: IOPair, bucket: int):
+        prev_p_combo_name, prev_examples = self.examples[-1]
+        current_p_combo_name = self.make_test_name(p_combo)
+
+        if prev_p_combo_name != current_p_combo_name:
+            if len(prev_examples) == 0:
+                self.examples.pop()
+                self.not_found_combos.append(prev_p_combo_name)
+            self.examples.append((current_p_combo_name, []))
+
+        _, curr_examples = self.examples[-1]
+        curr_examples.append(example)
+
+    def write_example_not_found(self, p_combo: PCombo, bucket: int):
+        pass
+
+    def wrap_up_examples(self):
+        prev_p_combo_name, prev_examples = self.examples[-1]
+        if not prev_examples:
+            self.examples.pop()
+            self.not_found_combos.append(prev_p_combo_name)
+
+    def make_test_name(self, p_combo: PCombo):
+        if all(p_combo.values()):
+            return f"allprop"
+        return f"notp-{'-'.join(p.name[1:] for p, value in p_combo.items() if not value)}"
+
+    def write_python_header(self):
+        self.stringio.write(
+            "n = {}\n"
+            "instrs = {}\n"
+            "outstrs = {}\n"
+            "propnums = {}\n"
+            "\n"
+            f"for idx in range({len(self.examples)}):\n"
+            f"\tinstrs[idx] = {{}}\n"
+            f"\toutstrs[idx] = {{}}\n"
+            "\n"
+        )
+
+    def write_python_examples(self):
+        for outer_i, (propname, examples) in enumerate(self.examples):
+            self.stringio.write(
+                f"propnums[{outer_i}] = \'{propname}\'\n"
+                f"n[{outer_i}] = {len(examples)}\n"
+            )
+            for inner_i, (input_dag, output_list) in enumerate(examples):
+                self.stringio.write(
+                    f"# PROPERTY: {propname} ({inner_i})\n"
+                    f"instrs[{outer_i}][{inner_i}] = \"{repr(input_dag.original_tuples)}\"\n"
+                    f"outstrs[{outer_i}][{inner_i}] = \"{repr(output_list)}\"\n"
+                    "\n"
+                )
+
+    def write_python_known_invalid(self):
+        for name, reason in self.known_invalid_combos:
+            self.stringio.write(
+                f"# No check was generated for \"{name}\"\n"
+                f"# The example generator gave the following reason: {reason}.\n\n"
+            )
+
+    def write_python_not_found(self):
+        for name in self.not_found_combos:
+            self.stringio.write(
+                f"# No check was generated for \"{name}\"\n"
+                "# Please re-run the example generator.\n\n"
+            )
+
 
 if __name__ == '__main__':
-    OUTPUT_FILE = "hypothesis_checks_buckets_trivial.arr"
-    EXAMPLES_PER_BUCKET = 1
-    SHRUNK_EXAMPLES_PER_BUCKET = 1
+    OUTPUT_FILE = "hypothesis_checks_buckets_trivial.py"
+    EXAMPLES_PER_BUCKET = 15
+    SHRUNK_EXAMPLES_PER_BUCKET = 3
     TRIVIAL_SHRUNK_EXAMPLES_PER_BUCKET = 1
 
-    with DebugWriter() as writer:
-    # with PyretWriter(OUTPUT_FILE) as writer:
+    # with DebugWriter() as writer:
+    with PythonWriter(OUTPUT_FILE) as writer:
         for bitvector in product((True, False), repeat=len(p_name_list)):
             print(bitvector)
             p_combo = {p_name: answer for p_name, answer in zip(p_name_list, bitvector)}
@@ -195,13 +256,3 @@ if __name__ == '__main__':
                 except NoSuchExample:
                     writer.write_example_not_found(p_combo, bucket)
             print(time.process_time() - writer.start_time)
-
-# NOTE: assume(input_list != output_list) eliminates many sets that would be correct. 
-#       The remaining sets are difficult to find and take many more examples.
-
-# TODO - allow for "don't care" (is this necessary if we have all points on the lattice?)
-
-# Hypothesis learns over time, and caches results in a local database (that I .gitignore).
-# EXCEPT that the function is dynamically defined, so Hypothesis can't hash it to cache results
-# TODO - essentially make a macro that expands to a larger Python file, with one function definition per p_combo,
-#        allowing Hypothesis to remember

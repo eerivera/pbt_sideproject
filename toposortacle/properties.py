@@ -8,6 +8,7 @@ EdgeTuples = List[Tuple[Node, Node]]
 
 class DAG:
     def __init__(self, edge_tuples: EdgeTuples):
+        self.original_tuples = edge_tuples
         self.edge_map: EdgeMap = {}
         for source, sink in edge_tuples:
             self.edge_map.setdefault(source, set()).add(sink)
