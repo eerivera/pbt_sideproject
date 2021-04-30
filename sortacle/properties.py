@@ -23,11 +23,11 @@ def sortacle(l: PersonSequence) -> PersonSequence:
 
 # if an element is in output, it must be mentioned in input
 def p1(input_list: PersonSequence, output_list: PersonSequence) -> bool:
-    return all((e in output_list for e in input_list))
+    return all((e in input_list for e in output_list))
 
 # if an element is in input, it must be mentioned in output
 def p2(input_list: PersonSequence, output_list: PersonSequence) -> bool:
-    return all((e in input_list for e in output_list))
+    return all((e in output_list for e in input_list))
 
 # SORTED: for all output x, adjacencies <= by age
 def p3(input_list: PersonSequence, output_list: PersonSequence) -> bool:
@@ -54,11 +54,11 @@ class PName(Enum):
     P6 = "p6"
 
 p_function_map = {
-    PName.P1: p1, 
-    PName.P2: p2, 
-    PName.P3: p3, 
-    PName.P4: p4, 
-    PName.P5: p5, 
+    PName.P1: p1,
+    PName.P2: p2,
+    PName.P3: p3,
+    PName.P4: p4,
+    PName.P5: p5,
     PName.P6: p6
 }
 

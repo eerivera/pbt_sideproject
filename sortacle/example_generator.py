@@ -27,14 +27,14 @@ PCombo = Dict[PName, bool]
 
 def is_known_unsatisfiable(p_combo: PCombo):
     # TODO - more detailed explanations of implications
-    if p_combo[PName.P5] and not p_combo[PName.P1]:
-        return (True, "p5 -> p1")
-    elif p_combo[PName.P4] and not p_combo[PName.P2]:
-        return (True, "p4 -> p2")
-    elif p_combo[PName.P1] and p_combo[PName.P4] and not p_combo[PName.P6]:
-        return (True, "(p1 & p4) -> p6")
-    elif p_combo[PName.P2] and p_combo[PName.P5] and not p_combo[PName.P6]:
-        return (True, "(p2 & p5) -> p6")
+    if p_combo[PName.P5] and not p_combo[PName.P2]:
+        return (True, "p5 -> p2")
+    elif p_combo[PName.P4] and not p_combo[PName.P1]:
+        return (True, "p4 -> p1")
+    elif p_combo[PName.P1] and p_combo[PName.P5] and not p_combo[PName.P6]:
+        return (True, "(p1 & p5) -> p6")
+    elif p_combo[PName.P2] and p_combo[PName.P4] and not p_combo[PName.P6]:
+        return (True, "(p2 & p4) -> p6")
     elif p_combo[PName.P4] and p_combo[PName.P5] and not p_combo[PName.P6]:
         return (True, "(p4 & p5) -> p6")
     elif p_combo[PName.P4] and p_combo[PName.P6] and not p_combo[PName.P5]:
@@ -49,9 +49,9 @@ class AbstractWriter:
         pass
 
     def __enter__(self):
-        pass
+        return self
 
-    def __exit__(self):
+    def __exit__(self, *_):
         pass
 
     # TODO - mark as abstract methods
@@ -67,6 +67,11 @@ class AbstractWriter:
     def mark_end(self):
         raise NotImplementedError
 
+    def make_test_name(self, p_combo: PCombo, bucket: int):
+        if all(p_combo.values()):
+            return f"allprop_{bucket}"
+        return f"notp-{'-'.join(p.name[1:] for p, value in p_combo.items() if not value)}_{bucket}" # TODO - able to generate multiple examples per bucket?
+
 class DebugWriter(AbstractWriter):
     def __init__(self):
         super().__init__()
@@ -78,15 +83,18 @@ class DebugWriter(AbstractWriter):
         }
 
     def write_known_unsatisfiable(self, p_combo: PCombo, reason: str):
-        print(f"{p_combo}: \n\t{reason}")
+        p_combo_name = self.make_test_name(p_combo, 0)
+        print(f"{p_combo_name}: \n\t{reason}")
         self.count["known_invalid"] += 1
 
-    def write_valid_example(self, p_combo: PCombo, example: IOPair, _: int):
-        print(f"{p_combo}: \n\t{example}")
+    def write_valid_example(self, p_combo: PCombo, example: IOPair, bucket: int):
+        p_combo_name = self.make_test_name(p_combo, bucket)
+        print(f"{p_combo_name}: \n\t{example}")
         self.count["example_found"] += 1
 
-    def write_example_not_found(self, p_combo: PCombo, _: int):
-        print(f"{p_combo}: \n\tNo example found")
+    def write_example_not_found(self, p_combo: PCombo, bucket: int):
+        p_combo_name = self.make_test_name(p_combo, bucket)
+        print(f"{p_combo_name}: \n\tNo example found")
         self.count["no_example"] += 1
 
     def mark_end(self):
@@ -140,11 +148,6 @@ class PyretWriter(AbstractWriter):
             "# Please re-run the example generator.\n\n"
         )
 
-    def make_test_name(self, p_combo: PCombo, bucket: int):
-        if all(p_combo.values()):
-            return f"allprop_{bucket}"
-        return f"notp-{'-'.join(p.name[1:] for p, value in p_combo.items() if not value)}_{bucket}" # TODO - able to generate multiple examples per bucket?
-
     def make_personlist_str(self, person_list: PersonSequence):
         return f"[list: {', '.join(self.make_person_str(person) for person in person_list)}]"
 
@@ -177,7 +180,7 @@ if __name__ == '__main__':
                 return all((p_function_map[p_name](input_list, output_list) == answer
                             for p_name, answer in p_combo.items()
                             if answer is not None))
-            
+
             for bucket in range(EXAMPLES_PER_BUCKET):
                 if bucket == SHRUNK_EXAMPLES_PER_BUCKET:
                     del phases_to_use[-1] # i.e. stop shrinking future examples
@@ -191,7 +194,7 @@ if __name__ == '__main__':
                 except NoSuchExample:
                     writer.write_example_not_found(p_combo, bucket)
 
-# NOTE: assume(input_list != output_list) eliminates many sets that would be correct. 
+# NOTE: assume(input_list != output_list) eliminates many sets that would be correct.
 #       The remaining sets are difficult to find and take many more examples.
 
 # TODO - allow for "don't care" (is this necessary if we have all points on the lattice?)
