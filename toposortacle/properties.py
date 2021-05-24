@@ -36,7 +36,7 @@ def p2(dag: DAG, output: Output) -> bool:
 def p3(dag: DAG, output: Output) -> bool:
     return len(set(output)) == len(output)
 
-# (temp stub, need to ask about flexibility, conflicting with other properties) 
+# (temp stub, need to ask about flexibility, conflicting with other properties)
 # for all input tuples (x,y), idx[x] <= idx[y] in output
 def make_output_dict(output: Output) -> Dict[Node, int]:
     # maps to first index
@@ -56,19 +56,44 @@ def p4(dag: DAG, output: Output) -> bool:
 def p5(dag: DAG, output: Output) -> bool:
     return len(output) == len(dag.nodes)
 
+# regression test property: all nodes have the right "bag" of incoming edges that appear before that node
+def p6(instr, outstr):
+    for i, node in enumerate(outstr):
+        contained_edges = {}
+        for edge_start, edge_end in instr:
+            if edge_end == node:
+                if edge_start not in contained_edges:
+                    contained_edges[edge_start] = 0
+                contained_edges[edge_start] += 1
+
+        prev_node_edges = {}
+        for prev_i, prev_node in enumerate(outstr[:i]):
+            if prev_node not in prev_node_edges:
+                prev_node_edges[prev_node] = 0
+            prev_node_edges[prev_node] += 1
+
+        valid_subset = all(item in prev_node_edges.items()
+                           for item in contained_edges.items())
+        if not valid_subset:
+            return False
+
+    return True
+
 class PName(Enum):
     P1 = "p1"
     P2 = "p2"
     P3 = "p3"
     P4 = "p4"
     P5 = "p5"
+    P6 = "p6"
 
 p_function_map: Dict[PName, Property] = {
-    PName.P1: p1, 
-    PName.P2: p2, 
-    PName.P3: p3, 
-    PName.P4: p4, 
-    PName.P5: p5, 
+    PName.P1: p1,
+    PName.P2: p2,
+    PName.P3: p3,
+    PName.P4: p4,
+    PName.P5: p5,
+    PName.P6: p6,
 }
 
 p_name_list = sorted(p_function_map.keys(), key=lambda x:x.name)

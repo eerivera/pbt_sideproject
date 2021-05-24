@@ -11,9 +11,9 @@ from properties import DAG, Output, PName, p_function_map, p_name_list
 IOPair = Tuple[DAG, Output]
 
 MAX_N = 10
-NODE_MASTER_LIST_TRIVIAL = [(n, 
+NODE_MASTER_LIST_TRIVIAL = [(n,
                              list(map(str, range(n))),
-                             list(map(str, range(min(n+1, MAX_N))))) 
+                             list(map(str, range(min(n+1, MAX_N)))))
                             for n in range(MAX_N)]
 NODE_MASTER_LIST = NODE_MASTER_LIST_TRIVIAL[4:]
 OUTPUT_MASTER_LIST = list(map(str, range(10)))
@@ -24,7 +24,7 @@ def io_pair_strat_comp(draw):
     output_strat = lists(sampled_from(output_node_list), min_size=3, max_size=10)
     ordering = draw(permutations(node_list))
     possible_edges = list(combinations(ordering, 2))
-    edges_strat = lists(sampled_from(possible_edges), min_size=4, unique=True)
+    edges_strat = lists(sampled_from(possible_edges), min_size=2, unique=True)
     dag_strat = builds(DAG, edge_tuples=edges_strat)
     return draw(tuples(dag_strat, output_strat))
 
@@ -58,6 +58,13 @@ def is_known_unsatisfiable(p_combo: PCombo):
     if all((not p_combo[PName.P1], p_combo[PName.P2], not p_combo[PName.P3], p_combo[PName.P5])):
         return (True, "(not p1 & p2 & not p3 & p5) -> False")
 
+    # new for p6, empirical but should be validated against Alloy
+    if all((p_combo[PName.P3], p_combo[PName.P4])) and \
+       not p_combo[PName.P6]:
+        return (True, "(p3 & p4) -> p6")
+    if all((p_combo[PName.P2], not p_combo[PName.P4])) and \
+       p_combo[PName.P6]:
+        return (True, "(p2 & not p4) -> not p6")
 
     return (False, None)
 
@@ -219,8 +226,8 @@ class PythonWriter(AbstractWriter):
 
 
 if __name__ == '__main__':
-    OUTPUT_FILE = "fewer_edges.py"
-    EXAMPLES_PER_BUCKET = 15
+    OUTPUT_FILE = "hypothesis_tests_new.py"
+    EXAMPLES_PER_BUCKET = 10
     SHRUNK_EXAMPLES_PER_BUCKET = 3
     TRIVIAL_SHRUNK_EXAMPLES_PER_BUCKET = 1
 
@@ -242,7 +249,7 @@ if __name__ == '__main__':
                 return all((p_function_map[p_name](*io_pair) == answer
                             for p_name, answer in p_combo.items()
                             if answer is not None))
-            
+
             for bucket in range(EXAMPLES_PER_BUCKET):
                 if bucket == SHRUNK_EXAMPLES_PER_BUCKET:
                     del phases_to_use[-1] # i.e. stop shrinking future examples
