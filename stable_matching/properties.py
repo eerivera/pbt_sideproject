@@ -34,22 +34,23 @@ def p2(input_pair: InputPair, matches: Matches) -> bool:
     return possible_companies.issubset(companies_in_matches) # everyone possible is in matches, but matches can have extra
 
 # STABILITY
-def make_matches_dicts_p3(input_pair: InputPair, matches: Matches): 
+def make_matches_dicts_p3(input_pair: InputPair, matches: Matches):
     # map every company to min pref for any candidate
     #     every candidate to min pref for any company
+    infinity=float("inf")
     companies, candidates = input_pair
     n = len(companies)
-    company_matches: Dict[int, int] = defaultdict(lambda:n)
-    candidate_matches: Dict[int, int] = defaultdict(lambda:n)
+    company_matches: Dict[int, int] = defaultdict(lambda:0)
+    candidate_matches: Dict[int, int] = defaultdict(lambda:0)
     for hire in matches:
         hire_candidate = hire.candidate
         hire_company = hire.company
         if hire_candidate < n and hire_company < n:
             company_pref_of_candidate = companies[hire_company].index(hire_candidate)
             candidate_pref_of_company = candidates[hire_candidate].index(hire_company)
-            
-            company_matches[hire_company] = min(company_matches[hire_company], company_pref_of_candidate)
-            candidate_matches[hire_candidate] = min(candidate_matches[hire_candidate], candidate_pref_of_company)
+
+            company_matches[hire_company] = min(company_matches.get(hire_company, infinity), company_pref_of_candidate)
+            candidate_matches[hire_candidate] = min(candidate_matches.get(hire_candidate, infinity), candidate_pref_of_company)
     return company_matches, candidate_matches
 
 def p3(input_pair: InputPair, matches: Matches) -> bool:
@@ -65,7 +66,7 @@ def p3(input_pair: InputPair, matches: Matches) -> bool:
     # for (cheater_company, cheater_company_prefs), (cheater_candidate, cheater_candidate_prefs) in product(enumerate(companies), enumerate(candidates)):
     #     if Hire(cheater_company, cheater_candidate) in matches:
     #         continue
-        
+
     #     cheater_company_pref_for_cheater_candidate = cheater_company_prefs.index(cheater_candidate)
     #     cheater_candidate_pref_for_cheater_company = cheater_candidate_prefs.index(cheater_company)
     #     # Checking for None means that we just ignore companies in the output that weren't in the input
@@ -113,12 +114,12 @@ class PName(Enum):
     P6 = "p6"
 
 p_function_map: Dict[PName, Property] = {
-    PName.P1: p1, 
-    PName.P2: p2, 
-    PName.P3: p3, 
-    PName.P4: p4, 
-    PName.P5: p5, 
-    PName.P6: p6
+    PName.P1: p1,
+    PName.P2: p2,
+    PName.P3: p3,
+    PName.P4: p4,
+    PName.P5: p5,
+    PName.P6: p6,
 }
 
 p_name_list = sorted(p_function_map.keys(), key=lambda x:x.name)
@@ -126,9 +127,9 @@ p_name_list = sorted(p_function_map.keys(), key=lambda x:x.name)
 # We rely heavily on the well-formedness of inputs.
 
 if __name__ == '__main__':
-    example_companies = [[1, 2, 0, 3], [1, 2, 3, 0], [1, 2, 0, 3], [2, 0, 3, 1]]
-    example_candidates = [[0, 3, 1, 2], [2, 0, 3, 1], [3, 2, 0, 1], [0, 3, 1, 2]]
+    example_companies = [[0, 1], [0, 1]]
+    example_candidates = [[1, 0], [0, 1]]
 
-    example_output = {Hire(2, 1), Hire(3, 2), Hire(0, 3), Hire(1, 0)}
+    example_output = {Hire(0, 0), Hire(1, 1)}
 
     print(p3((example_companies, example_candidates), example_output))

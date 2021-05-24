@@ -45,7 +45,7 @@ def is_known_unsatisfiable(p_combo: PCombo):
     # and i must all 3 companies and no more (meaning p5 is implied)
     # therefore, p2 & p4 & p6 -> p1 & p5
     # this generalizes to any n
-    
+
     # without loss of generality, the same argument applies to prove that
     # p1 & p4 & p5 -> p2 & p6
 
@@ -60,16 +60,14 @@ def is_known_unsatisfiable(p_combo: PCombo):
     # TODO - justify these
     elif p_combo[PName.P3] and not any((p_combo[PName.P1], p_combo[PName.P2])):
         return (True, "(p3) -> (p1 | p2)")
-    elif all((p_combo[PName.P1], p_combo[PName.P3], p_combo[PName.P4])) \
-        and not any((p_combo[PName.P2], p_combo[PName.P5])):
-        return (True, "(p1 & p3 & p4) -> (p2 | p5)")
-    elif all((p_combo[PName.P2], p_combo[PName.P3], p_combo[PName.P4])) \
-        and not any((p_combo[PName.P1], p_combo[PName.P6])):
-        return (True, "(p2 & p3 & p4) -> (p1 | p6)")
 
-    # REVISIT THESE ASSUMPTIONS NOW THAT THOMAS CAUGHT A BUG IN P3
-
-
+    # THESE ARE NOT TRUE, BUT TAKE SOOOO MUCH TIME TO GENERATE FOR
+    # elif all((p_combo[PName.P1], p_combo[PName.P3], p_combo[PName.P4])) \
+    #     and not any((p_combo[PName.P2], p_combo[PName.P5])):
+    #     return (True, "(p1 & p3 & p4) -> (p2 | p5)")
+    # elif all((p_combo[PName.P2], p_combo[PName.P3], p_combo[PName.P4])) \
+    #     and not any((p_combo[PName.P1], p_combo[PName.P6])):
+    #     return (True, "(p2 & p3 & p4) -> (p1 | p6)")
 
     return (False, None)
 
@@ -98,6 +96,11 @@ class AbstractWriter:
     def mark_end(self):
         raise NotImplementedError
 
+def makename(p_combo):
+    if all(p_combo.values()):
+        return "allprop"
+    else:
+        return f"notp-{'-'.join(p.name[1:] for p, value in p_combo.items() if not value)}"
 
 class DebugWriter(AbstractWriter):
     def __init__(self):
@@ -109,15 +112,17 @@ class DebugWriter(AbstractWriter):
         }
 
     def __exit__(self, *_): # TODO - handle errors
-        super().exit()
+        super().__exit__()
         print(self.count)
 
     def write_known_unsatisfiable(self, p_combo: PCombo, reason: str):
-        print(f"{p_combo}: \n\t{reason}")
+        bucket_name = makename(p_combo)
+        print(f"{bucket_name}: {reason}")
         self.count["known_invalid"] += 1
 
     def write_valid_example(self, p_combo: PCombo, example: IOPair, _: int):
-        print(f"{p_combo}: \n\t{example}")
+        bucket_name = makename(p_combo)
+        print(f"{bucket_name}: \n\t{example}")
         self.count["example_found"] += 1
 
     def write_example_not_found(self, p_combo: PCombo, _: int):
@@ -186,8 +191,8 @@ class PyretWriter(AbstractWriter):
         return f"hire({hire.company}, {hire.candidate})"
 
 if __name__ == '__main__':
-    OUTPUT_FILE = "hypothesis_checks_buckets_trivial.arr"
-    EXAMPLES_PER_BUCKET = 15
+    OUTPUT_FILE = "hypothesis_checks_buckets_trivial_2.arr"
+    EXAMPLES_PER_BUCKET = 10
     SHRUNK_EXAMPLES_PER_BUCKET = 3
     TRIVIAL_SHRUNK_EXAMPLES_PER_BUCKET = 1
 
@@ -209,7 +214,7 @@ if __name__ == '__main__':
                 return all((p_function_map[p_name](*io_pair) == answer
                             for p_name, answer in p_combo.items()
                             if answer is not None))
-            
+
             for bucket in range(EXAMPLES_PER_BUCKET):
                 if bucket == SHRUNK_EXAMPLES_PER_BUCKET:
                     del phases_to_use[-1] # i.e. stop shrinking future examples
@@ -224,7 +229,7 @@ if __name__ == '__main__':
                     writer.write_example_not_found(p_combo, bucket)
             print(time.process_time() - writer.start_time)
 
-# NOTE: assume(input_list != output_list) eliminates many sets that would be correct. 
+# NOTE: assume(input_list != output_list) eliminates many sets that would be correct.
 #       The remaining sets are difficult to find and take many more examples.
 
 # TODO - allow for "don't care" (is this necessary if we have all points on the lattice?)
