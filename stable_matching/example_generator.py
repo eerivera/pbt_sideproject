@@ -191,21 +191,26 @@ class PyretWriter(AbstractWriter):
         return f"hire({hire.company}, {hire.candidate})"
 
 if __name__ == '__main__':
-    OUTPUT_FILE = "hypothesis_checks_buckets_trivial_2.arr"
+    OUTPUT_FILE = "hypothesis_tests_benchmark.arr"
+    BENCHMARK_FILE = "hypothesis_benchmarks.csv"
     EXAMPLES_PER_BUCKET = 10
     SHRUNK_EXAMPLES_PER_BUCKET = 3
     TRIVIAL_SHRUNK_EXAMPLES_PER_BUCKET = 1
 
     # with DebugWriter() as writer:
     with PyretWriter(OUTPUT_FILE) as writer:
+        benchmark_rows = []
         for bitvector in product((True, False), repeat=len(p_name_list)):
-            print(bitvector)
             p_combo = {p_name: answer for p_name, answer in zip(p_name_list, bitvector)}
 
             is_invalid, reason = is_known_unsatisfiable(p_combo)
             if is_invalid:
                 writer.write_known_unsatisfiable(p_combo, reason)
                 continue
+
+            bucket_name = makename(p_combo)
+            timers = [None for _ in range(EXAMPLES_PER_BUCKET)]
+            start_bucket_time = time.process_time()
 
             is_trivial = True
             phases_to_use = [Phase.generate, Phase.target, Phase.shrink]
@@ -216,6 +221,7 @@ if __name__ == '__main__':
                             if answer is not None))
 
             for bucket in range(EXAMPLES_PER_BUCKET):
+                start_index_time = time.process_time()
                 if bucket == SHRUNK_EXAMPLES_PER_BUCKET:
                     del phases_to_use[-1] # i.e. stop shrinking future examples
                 if bucket == TRIVIAL_SHRUNK_EXAMPLES_PER_BUCKET:
@@ -227,8 +233,16 @@ if __name__ == '__main__':
                     writer.write_valid_example(p_combo, example, bucket)
                 except NoSuchExample:
                     writer.write_example_not_found(p_combo, bucket)
-            print(time.process_time() - writer.start_time)
+                finally:
+                    end_index_time = time.process_time()
+                    timers[bucket] = end_index_time - start_index_time
+            end_bucket_time = time.process_time()
+            benchmark_rows.append([bucket_name, end_bucket_time - start_bucket_time] + timers)
 
+    with open(BENCHMARK_FILE, 'w', newline='') as csv_file:
+        csv_writer = csv.writer(csv_file)
+        csv_writer.writerow(["bucket", "total bucket time"] + list(range(EXAMPLES_PER_BUCKET)))
+        csv_writer.writerows(benchmark_rows)
 # NOTE: assume(input_list != output_list) eliminates many sets that would be correct.
 #       The remaining sets are difficult to find and take many more examples.
 
