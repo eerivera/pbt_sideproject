@@ -5,6 +5,7 @@ from io import StringIO
 from itertools import combinations, product
 from typing import Dict, List, Tuple
 import time
+import csv
 
 from properties import DAG, Output, PName, p_function_map, p_name_list
 
@@ -59,12 +60,12 @@ def is_known_unsatisfiable(p_combo: PCombo):
         return (True, "(not p1 & p2 & not p3 & p5) -> False")
 
     # new for p6, empirical but should be validated against Alloy
-    if all((p_combo[PName.P3], p_combo[PName.P4])) and \
-       not p_combo[PName.P6]:
-        return (True, "(p3 & p4) -> p6")
-    if all((p_combo[PName.P2], not p_combo[PName.P4])) and \
-       p_combo[PName.P6]:
-        return (True, "(p2 & not p4) -> not p6")
+    if all((p_combo[PName.P2], p_combo[PName.P3])) and \
+       not (p_combo[PName.P4] == p_combo[PName.P6]):
+        return (True, "p2 & p3 -> (p4 <-> p6)")
+
+    if all((not p_combo[PName.P2], p_combo[PName.P3], not p_combo[PName.P4], p_combo[PName.P6])):
+        return (True, "(not p2 & p3 & not p4 & p6) -> False")
 
     return (False, None)
 
@@ -93,6 +94,11 @@ class AbstractWriter:
     def mark_end(self):
         raise NotImplementedError
 
+def makename(p_combo):
+    if all(p_combo.values()):
+        return "allprop"
+    else:
+        return f"notp-{'-'.join(p.name[1:] for p, value in p_combo.items() if not value)}"
 
 class DebugWriter(AbstractWriter):
     def __init__(self):
@@ -108,15 +114,19 @@ class DebugWriter(AbstractWriter):
         print(self.count)
 
     def write_known_unsatisfiable(self, p_combo: PCombo, reason: str):
-        print(f"{p_combo}: \n\t{reason}")
+        bucket_name = makename(p_combo)
+        print(f"{bucket_name}: {reason}")
         self.count["known_invalid"] += 1
 
     def write_valid_example(self, p_combo: PCombo, example: IOPair, _: int):
-        print(f"{p_combo}: \n\t{example}")
+        bucket_name = makename(p_combo)
+        # print(f"{bucket_name}: \n\t{example}")
+        print(f"{bucket_name}: found example")
         self.count["example_found"] += 1
 
     def write_example_not_found(self, p_combo: PCombo, _: int):
-        print(f"{p_combo}: \n\tNo example found")
+        bucket_name = makename(p_combo)
+        print(f"{bucket_name}: \n\tNo example found")
         self.count["no_example"] += 1
 
 class PythonWriter(AbstractWriter):
@@ -226,21 +236,26 @@ class PythonWriter(AbstractWriter):
 
 
 if __name__ == '__main__':
-    OUTPUT_FILE = "hypothesis_tests_new.py"
+    OUTPUT_FILE = "hypothesis_tests_benchmark.py"
+    BENCHMARK_FILE = "hypothesis_benchmarks.csv"
     EXAMPLES_PER_BUCKET = 10
     SHRUNK_EXAMPLES_PER_BUCKET = 3
     TRIVIAL_SHRUNK_EXAMPLES_PER_BUCKET = 1
 
     # with DebugWriter() as writer:
     with PythonWriter(OUTPUT_FILE) as writer:
+        benchmark_rows = []
         for bitvector in product((True, False), repeat=len(p_name_list)):
-            print(bitvector)
             p_combo = {p_name: answer for p_name, answer in zip(p_name_list, bitvector)}
 
             is_invalid, reason = is_known_unsatisfiable(p_combo)
             if is_invalid:
                 writer.write_known_unsatisfiable(p_combo, reason)
                 continue
+
+            bucket_name = makename(p_combo)
+            timers = [None for _ in range(EXAMPLES_PER_BUCKET)]
+            start_bucket_time = time.process_time()
 
             is_trivial = True
             phases_to_use = [Phase.generate, Phase.target, Phase.shrink]
@@ -251,6 +266,7 @@ if __name__ == '__main__':
                             if answer is not None))
 
             for bucket in range(EXAMPLES_PER_BUCKET):
+                start_index_time = time.process_time()
                 if bucket == SHRUNK_EXAMPLES_PER_BUCKET:
                     del phases_to_use[-1] # i.e. stop shrinking future examples
                 if bucket == TRIVIAL_SHRUNK_EXAMPLES_PER_BUCKET:
@@ -262,4 +278,13 @@ if __name__ == '__main__':
                     writer.write_valid_example(p_combo, example, bucket)
                 except NoSuchExample:
                     writer.write_example_not_found(p_combo, bucket)
-            print(time.process_time() - writer.start_time)
+                finally:
+                    end_index_time = time.process_time()
+                    timers[bucket] = end_index_time - start_index_time
+            end_bucket_time = time.process_time()
+            benchmark_rows.append([bucket_name, end_bucket_time - start_bucket_time] + timers)
+
+    with open(BENCHMARK_FILE, 'w', newline='') as csv_file:
+        csv_writer = csv.writer(csv_file)
+        csv_writer.writerow(["bucket", "total bucket time"] + list(range(EXAMPLES_PER_BUCKET)))
+        csv_writer.writerows(benchmark_rows)

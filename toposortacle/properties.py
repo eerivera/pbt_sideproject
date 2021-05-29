@@ -36,7 +36,6 @@ def p2(dag: DAG, output: Output) -> bool:
 def p3(dag: DAG, output: Output) -> bool:
     return len(set(output)) == len(output)
 
-# (temp stub, need to ask about flexibility, conflicting with other properties)
 # for all input tuples (x,y), idx[x] <= idx[y] in output
 def make_output_dict(output: Output) -> Dict[Node, int]:
     # maps to first index
@@ -48,9 +47,32 @@ def make_output_dict(output: Output) -> Dict[Node, int]:
             result[node] = i
     return result
 
+# Not technically correct, see notes in Alloy spec
+#(e.g. doesn't handle input = [(1, 2), (2, 3)], output = [1, 1, 1] )
+
+# def p4(dag: DAG, output: Output) -> bool:
+#     output_dict = make_output_dict(output)
+#     return all((output_dict[source] < output_dict[sink] for source, sink in dag))
+
+# borrowed from: https://stackoverflow.com/questions/8673482/transitive-closure-python-tuples
+def transitive_closure(a):
+    closure = set(a)
+    while True:
+        new_relations = set((x,w) for x,y in closure for q,w in closure if q == y)
+        closure_until_now = closure | new_relations
+        if closure_until_now == closure:
+            break
+        closure = closure_until_now
+    return closure
+
 def p4(dag: DAG, output: Output) -> bool:
-    output_dict = make_output_dict(output)
-    return all((output_dict[source] < output_dict[sink] for source, sink in dag))
+    partial_order = transitive_closure(dag.original_tuples)
+    for i, ele1 in enumerate(output):
+        for j, ele2 in enumerate(output[i+1:], start=i+1):
+            if (ele2, ele1) in partial_order:
+                return False
+    return True
+
 
 # misconception subproperty: same output size as unique entries in input
 def p5(dag: DAG, output: Output) -> bool:
@@ -97,3 +119,7 @@ p_function_map: Dict[PName, Property] = {
 }
 
 p_name_list = sorted(p_function_map.keys(), key=lambda x:x.name)
+
+if __name__ == '__main__':
+    dag = DAG([('a', 'b'), ('b', 'c'), ('c', 'd')])
+    print(p4(dag, ['a', 'a', 'a', 'a']))
